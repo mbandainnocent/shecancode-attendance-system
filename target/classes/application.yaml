@@ -46,3 +46,19 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springframework.jdbc.datasource.init: DEBUG
+    org.springframework.security: DEBUG   # remove in production
+
+# 6. JWT CONFIGURATION
+# IMPORTANT: Replace the secret with a strong random 256-bit key in production.
+# Generate one with: openssl rand -hex 32
+app:
+  jwt:
+    secret: "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970"
+    expiration-ms: 86400000   # 24 hours
+
+# 7. SPRINGDOC / SWAGGER — expose the JWT Bearer input in Swagger UI
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
