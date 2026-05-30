@@ -1,6 +1,7 @@
 -- ==========================================
 -- 1. INSERT COHORTS
 -- ==========================================
+
 INSERT INTO cohort (cohort_id,
                     cohort_number,
                     start_date,
@@ -65,7 +66,7 @@ INSERT INTO attendance(attendance_id,
                          updated_at,
                        recorded_by_id,
                        recorded_by_name)
-VALUES (RANDOM_UUID(), '550e8400-e29b-41d4-a716-446655440011', '550e8400-e29b-41d4-a716-446655440010',
+VALUES ('550e8400-e29b-41d4-a716-446655440012', '550e8400-e29b-41d4-a716-446655440011', '550e8400-e29b-41d4-a716-446655440010',
         '550e8400-e29b-41d4-a716-446655440000', '2026-03-01 12:00:00', 'PRESENT', 'Good', '2026-03-01',
         '2026-03-01 12:00:00', '2026-03-01 12:00:00', '550e8400-e29b-41d4-a716-446655440010', 'Existing User');
 
@@ -79,9 +80,9 @@ INSERT INTO participant(
     consecutive_absences,
     last_updated
 )
-values (RANDOM_UUID(),'550e8400-e29b-41d4-a716-446655440011',
+values ('550e8400-e29b-41d4-a716-446655440013','550e8400-e29b-41d4-a716-446655440011',
         '550e8400-e29b-41d4-a716-446655440010',
-        10, 10, 'green',
+        10, 10, 'GREEN',
         0, CURRENT_DATE);
 -- ==========================================
 -- SEED USERS  (RBAC bootstrap)
@@ -90,9 +91,9 @@ values (RANDOM_UUID(),'550e8400-e29b-41d4-a716-446655440011',
 --   trainer → Trainer@1234
 -- ==========================================
 INSERT INTO app_user (user_id, username, password, full_name, role, enabled) VALUES
-    (RANDOM_UUID(), 'admin',
-     '$2a$12$nLCkF1FmpAiN95U3q8gBge1NmFOSLWJSWjCBU9gfp9vfOFSN5qmMa',
+    ('550e8400-e29b-41d4-a716-446655440014', 'admin',
+     '$2a$10$R1oiAllnb80DehTDKX/IIOgRCPJfxvx1OWaARE.kuK5RdW4rSqAMG',
      'System Administrator', 'ADMIN', TRUE),
-    (RANDOM_UUID(), 'trainer1',
+    ('550e8400-e29b-41d4-a716-446655440015', 'trainer1',
      '$2a$12$Y1U6hXVhGmWBqLBFXBJLlOTMPRR/OjNR5sC4kqKSigjGFSmH/tlOu',
      'Default Trainer', 'TRAINER', TRUE);

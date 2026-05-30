@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS student CASCADE;
 DROP TABLE IF EXISTS program CASCADE;
 DROP TABLE IF EXISTS cohort CASCADE;
 DROP TABLE IF EXISTS app_user CASCADE;
+DROP TABLE IF EXISTS attendance_outbox CASCADE;
 
 -- ==========================================
 -- 2. CREATE COHORT (Parent)
@@ -63,10 +64,10 @@ CREATE TABLE attendance (
                          student_id UUID NOT NULL,
                          program_id UUID NOT NULL,
                          cohort_id UUID NOT NULL,
-                         check_in_time TIMESTAMP,
+                         check_in_time TIME,
                          attendance_status VARCHAR(255),
                          remarks VARCHAR(255),
-                         attendance_recorded_date TIMESTAMP,
+                         attendance_recorded_date DATE,
                          created_at TIMESTAMP,
                          updated_at TIMESTAMP,
                          recorded_by_id UUID,
@@ -81,11 +82,11 @@ CREATE TABLE participant(
                          id UUID NOT NULL PRIMARY KEY,
                          student_id UUID NOT NULL,
                          program_id UUID NOT NULL,
-                         attendance_points DOUBLE,
-                         attendance_percentage DOUBLE,
+                         attendance_points DOUBLE PRECISION,
+                         attendance_percentage DOUBLE PRECISION,
                          progress_color VARCHAR(255),
-                         consecutive_absences VARCHAR(255),
-                         last_updated TIMESTAMP
+                         consecutive_absences INTEGER,
+                         last_updated DATE
 
 );
 -- ==========================================
@@ -99,4 +100,19 @@ CREATE TABLE app_user (
     role     VARCHAR(50)  NOT NULL,   -- ADMIN | TRAINER | STUDENT
     enabled  BOOLEAN      NOT NULL DEFAULT TRUE,
     PRIMARY KEY (user_id)
+);
+
+-- ==========================================
+-- 7. CREATE ATTENDANCE_OUTBOX (Event Outbox Pattern)
+-- ==========================================
+CREATE TABLE attendance_outbox (
+    id UUID NOT NULL PRIMARY KEY,
+    event_type VARCHAR(255) NOT NULL,
+    aggregate_type VARCHAR(255) NOT NULL,
+    aggregate_id UUID NOT NULL,
+    payload JSONB NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    processed_at TIMESTAMP
 );
