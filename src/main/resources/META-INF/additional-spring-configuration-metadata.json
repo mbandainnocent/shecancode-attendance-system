@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "springdoc.Kafka.bootstrap-servers",
+      "type": "java.lang.String",
+      "description": "Description for springdoc.Kafka.bootstrap-servers."
+  }
+] }

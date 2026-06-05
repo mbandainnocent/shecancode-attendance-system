@@ -20,19 +20,28 @@ spring:
   sql:
     init:
       mode: always
+
+  # Move Kafka here, perfectly aligned with datasource, jpa, and sql!
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+
 logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springframework.security: DEBUG
+
 app:
   jwt:
     secret: ${JWT_SECRET:my-dev-secret-key-change-in-production}
     expiration-ms: 86400000
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
-
-kind: Application
