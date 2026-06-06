@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.util.List;
 import java.util.UUID;
 
@@ -92,6 +93,7 @@ public class StudentRegistrationService {
         return email.contains("@") && email.contains(".") &&
                 email.indexOf("@") < email.lastIndexOf(".");
     }
+
 
     public List<StudentResponseDao> getAllStudents() {
         return studentRepository.findAll().stream()

@@ -7,7 +7,6 @@ DROP TABLE IF EXISTS student CASCADE;
 DROP TABLE IF EXISTS program CASCADE;
 DROP TABLE IF EXISTS cohort CASCADE;
 DROP TABLE IF EXISTS app_user CASCADE;
-DROP TABLE IF EXISTS attendance_outbox CASCADE;
 
 -- ==========================================
 -- 2. CREATE COHORT (Parent)
@@ -17,7 +16,6 @@ CREATE TABLE cohort (
                         cohort_number VARCHAR(255) NOT NULL UNIQUE,
                         start_date DATE NOT NULL,
                         end_date DATE NOT NULL,
---                         graduation_date DATE NOT NULL,
                         PRIMARY KEY (cohort_id)
 );
 
@@ -29,8 +27,8 @@ CREATE TABLE program (
                          program_name VARCHAR(255) NOT NULL,
                          program_Duration INTEGER,
                          program_start_date DATE NOT NULL,
-                         program_end_date   DATE NOT NULL,
-                         cohort_id UUID NOT NULL ,
+                         program_end_date DATE NOT NULL,
+                         cohort_id UUID NOT NULL,
                          PRIMARY KEY (program_id),
                          CONSTRAINT fk_program_cohort FOREIGN KEY (cohort_id) REFERENCES cohort (cohort_id)
 );
@@ -46,9 +44,7 @@ CREATE TABLE student (
                          phone_number VARCHAR(255),
                          home_address VARCHAR(255),
                          current_occupation VARCHAR(255),
-                         student_status VARCHAR(50), -- Mapped from Enum String
---                          days_to_graduation INTEGER,
---                          total_graduation_days INTEGER,
+                         student_status VARCHAR(50),
                          cohort_id UUID NOT NULL,
                          program_id UUID NOT NULL,
                          PRIMARY KEY (student_id),
@@ -60,59 +56,47 @@ CREATE TABLE student (
 -- 5. CREATE ATTENDANCE
 -- ==========================================
 CREATE TABLE attendance (
-                         attendance_id UUID NOT NULL,
-                         student_id UUID NOT NULL,
-                         program_id UUID NOT NULL,
-                         cohort_id UUID NOT NULL,
-                         check_in_time TIME,
-                         attendance_status VARCHAR(255),
-                         remarks VARCHAR(255),
-                         attendance_recorded_date DATE,
-                         created_at TIMESTAMP,
-                         updated_at TIMESTAMP,
-                         recorded_by_id UUID,
-                         recorded_by_name VARCHAR(255),
-                         PRIMARY KEY (attendance_id),
-                         CONSTRAINT fk_attendance_student FOREIGN KEY (student_id) REFERENCES student (student_id),
-                         CONSTRAINT fk_attendance_program FOREIGN KEY (program_id) REFERENCES program (program_id),
-                         CONSTRAINT fk_attendance_cohort FOREIGN KEY (cohort_id) REFERENCES cohort (cohort_id)
+                            attendance_id UUID NOT NULL,
+                            student_id UUID NOT NULL,
+                            program_id UUID NOT NULL,
+                            cohort_id UUID NOT NULL,
+                            check_in_time TIMESTAMP,
+                            attendance_status VARCHAR(255),
+                            remarks VARCHAR(255),
+                            attendance_recorded_date TIMESTAMP,
+                            created_at TIMESTAMP,
+                            updated_at TIMESTAMP,
+                            recorded_by_id UUID,
+                            recorded_by_name VARCHAR(255),
+                            PRIMARY KEY (attendance_id),
+                            CONSTRAINT fk_attendance_student FOREIGN KEY (student_id) REFERENCES student (student_id),
+                            CONSTRAINT fk_attendance_program FOREIGN KEY (program_id) REFERENCES program (program_id),
+                            CONSTRAINT fk_attendance_cohort FOREIGN KEY (cohort_id) REFERENCES cohort (cohort_id)
 );
 
-CREATE TABLE participant(
-                         id UUID NOT NULL PRIMARY KEY,
-                         student_id UUID NOT NULL,
-                         program_id UUID NOT NULL,
-                         attendance_points DOUBLE PRECISION,
-                         attendance_percentage DOUBLE PRECISION,
-                         progress_color VARCHAR(255),
-                         consecutive_absences INTEGER,
-                         last_updated DATE
-
-);
 -- ==========================================
--- 6. CREATE APP_USER (Authentication / RBAC)
+-- 6. CREATE PARTICIPANT
+-- ==========================================
+CREATE TABLE participant(
+                            id UUID NOT NULL PRIMARY KEY,
+                            student_id UUID NOT NULL,
+                            program_id UUID NOT NULL,
+                            attendance_points DOUBLE,
+                            attendance_percentage DOUBLE,
+                            progress_color VARCHAR(255),
+                            consecutive_absences VARCHAR(255),
+                            last_updated TIMESTAMP
+);
+
+-- ==========================================
+-- 7. CREATE APP_USER
 -- ==========================================
 CREATE TABLE app_user (
-    user_id  UUID         NOT NULL,
-    username VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    full_name VARCHAR(255),
-    role     VARCHAR(50)  NOT NULL,   -- ADMIN | TRAINER | STUDENT
-    enabled  BOOLEAN      NOT NULL DEFAULT TRUE,
-    PRIMARY KEY (user_id)
-);
-
--- ==========================================
--- 7. CREATE ATTENDANCE_OUTBOX (Event Outbox Pattern)
--- ==========================================
-CREATE TABLE attendance_outbox (
-    id UUID NOT NULL PRIMARY KEY,
-    event_type VARCHAR(255) NOT NULL,
-    aggregate_type VARCHAR(255) NOT NULL,
-    aggregate_id UUID NOT NULL,
-    payload JSONB NOT NULL,
-    status VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP,
-    processed_at TIMESTAMP
+                          user_id UUID NOT NULL,
+                          username VARCHAR(255) NOT NULL UNIQUE,
+                          password VARCHAR(255) NOT NULL,
+                          full_name VARCHAR(255),
+                          role VARCHAR(50) NOT NULL,
+                          enabled BOOLEAN NOT NULL DEFAULT TRUE,
+                          PRIMARY KEY (user_id)
 );

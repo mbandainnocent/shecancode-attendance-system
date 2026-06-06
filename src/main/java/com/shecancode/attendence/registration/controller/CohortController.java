@@ -12,14 +12,16 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cohorts")
+
+
+@RequestMapping("/api/v1/cohort")
+
 public class CohortController {
     private final  CohortService cohortService;
 
     public CohortController(CohortService cohortService) {
         this.cohortService = cohortService;
     }
-
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getAllCohorts() {

@@ -32,8 +32,6 @@ public class SecurityConfig {
 
     // ── Public endpoints (no token required) ─────────────────────────────────
     private static final String[] PUBLIC_URLS = {
-            "/",                       // root path
-            "/favicon.ico",            // favicon
             "/api/v1/auth/**",          // login & register
             "/h2-console/**",           // dev H2 console
             "/swagger-ui/**",           // Swagger UI

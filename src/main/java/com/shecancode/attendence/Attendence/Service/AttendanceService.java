@@ -1,8 +1,5 @@
 package com.shecancode.attendence.Attendence.Service;
 
-import com.shecancode.attendence.Attendence.Event.OutboxEvent;
-import com.shecancode.attendence.Attendence.Event.OutboxEventFactory;
-import com.shecancode.attendence.Attendence.Event.OutboxRepository;
 import com.shecancode.attendence.Attendence.Mapper.AttendanceMapper;
 import com.shecancode.attendence.Attendence.Model.Attendance;
 import com.shecancode.attendence.Attendence.Repo.AttendanceRepository;
@@ -34,31 +31,18 @@ public class AttendanceService {
     private final ProgramRepository programRepository;
     private final CohortRepository cohortRepository;
     private final ParticipantService participantService;
-    private final OutboxRepository outboxRepository;
-    private final OutboxEventFactory outboxEventFactory;
 
-    public AttendanceService(AttendanceRepository attendanceRepository,
-                             StudentRepository studentRepository,
-                             ProgramRepository programRepository,
-                             CohortRepository cohortRepository,
-                             ParticipantService participantService,
-                             OutboxRepository outboxRepository,
-                             OutboxEventFactory outboxEventFactory) {
+    public AttendanceService(AttendanceRepository attendanceRepository, StudentRepository studentRepository,
+                             ProgramRepository programRepository, CohortRepository cohortRepository, ParticipantService participantService) {
         this.attendanceRepository = attendanceRepository;
         this.studentRepository = studentRepository;
         this.programRepository = programRepository;
         this.cohortRepository = cohortRepository;
         this.participantService = participantService;
-        this.outboxRepository = outboxRepository;
-        this.outboxEventFactory = outboxEventFactory;
     }
 
     @Transactional
-    public List<AttendanceResponse> recordBulkAttendance(
-            BulkAttendanceRequest request,
-            UUID programId,
-            UUID cohortId
-    ) {
+    public List<AttendanceResponse> recordBulkAttendance(BulkAttendanceRequest request, UUID programId, UUID cohortId) {
 
         // 1️⃣ Fetch Program & Cohort
         Program program = programRepository.findById(programId)
@@ -72,96 +56,54 @@ public class AttendanceService {
                 .map(StudentAttendanceRequestDto::getStudentId)
                 .toList();
 
-        Map<UUID, Student> studentMap = studentRepository.findAllById(studentIds)
-                .stream()
+        Map<UUID, Student> studentMap = studentRepository.findAllById(studentIds).stream()
                 .collect(Collectors.toMap(Student::getId, s -> s));
 
-        // 3️⃣ Existing attendance check
+        // 3️⃣ Check for duplicates
         Set<UUID> existingAttendanceIds = attendanceRepository
-                .findStudentIdsByDateAndCohort(
-                        request.getAttendanceDate(),
-                        cohortId
-                );
+                .findStudentIdsByDateAndCohort(request.getAttendanceDate(), cohortId);
 
         List<Attendance> attendancesToSave = new ArrayList<>();
 
-        // 4️⃣ Process attendance
+        // 4️⃣ Process the list
         for (StudentAttendanceRequestDto studentDto : request.getStudents()) {
-
             Student student = studentMap.get(studentDto.getStudentId());
 
-            if (student.getStatus() == Status.DROPPED_OUT) {
-                throw new StudentDroppedOutException(
-                        "Student is dropped out"
-                );
-            }
-//            Student student = studentMap.get(studentDto.getStudentId());
-//            if (student == null) {
-//                log.warn("Student ID {} passed in request but not found in Database", studentDto.getStudentId());
-//                continue; // or throw a ResourceNotFoundException depending on your business rules
-//            }
-
-            if (!student.getProgram().getId().equals(programId)
-                    || !student.getCohort().getId().equals(cohortId)) {
-                continue;
+            if ( student.getStatus() == Status.DROPPED_OUT) {
+                throw new StudentDroppedOutException("Student is dropped out");
             }
 
-            if (existingAttendanceIds.contains(student.getId())) {
-                continue;
-            }
+            if (!student.getProgram().getId().equals(programId) || !student.getCohort().getId().equals(cohortId)) continue;
+
+            if (existingAttendanceIds.contains(student.getId())) continue;
 
             Attendance attendance = AttendanceMapper.toAttendance(
-                    studentDto,
-                    student,
-                    program,
-                    cohort,
-                    request.getRecordedById(),
-                    request.getRecordedByName(),
-                    request.getAttendanceDate()
+                    studentDto, student, program, cohort,
+                    request.getRecordedById(), request.getRecordedByName(), request.getAttendanceDate()
             );
 
             attendancesToSave.add(attendance);
         }
 
-        if (attendancesToSave.isEmpty()) {
-            return Collections.emptyList();
-        }
+        if (attendancesToSave.isEmpty()) return Collections.emptyList();
 
-        // 5️⃣ SAVE ATTENDANCE
-        List<Attendance> savedAttendances =
-                attendanceRepository.saveAll(attendancesToSave);
+        // 7️⃣ Bulk Save
+        List<Attendance> savedAttendances = attendanceRepository.saveAll(attendancesToSave);
 
-        // 6️⃣ SAVE OUTBOX EVENTS
-        List<OutboxEvent> outboxEvents = savedAttendances.stream()
-                .map(outboxEventFactory::buildOutboxEvent)
-                .toList();
-        outboxRepository.saveAll(outboxEvents);
 
-        // 7️⃣ Update participant progress
         savedAttendances.stream()
                 .map(Attendance::getStudent)
                 .distinct()
-                .forEach(student ->
-                        participantService.updateProgress(student, program)
-                );
+                .forEach(student -> participantService.updateProgress(student, program));
 
-        // 8️⃣ Remaining days
-        Integer daysRemaining =
-                calculateRemainingDays(
-                        programId,
-                        program.getProgramDuration()
-                );
+        // Calculate "Trucker" Countdown
+        Integer daysRemaining = calculateRemainingDays(programId, program.getProgramDuration());
 
-        // 9️⃣ Response
         return savedAttendances.stream()
-                .map(attendance ->
-                        AttendanceMapper.toResponseDTO(
-                                attendance,
-                                daysRemaining
-                        )
-                )
+                .map(attendance -> AttendanceMapper.toResponseDTO(attendance, daysRemaining))
                 .toList();
     }
+
     @Transactional
     public List<AttendanceResponse> updateBulkAttendance(BulkAttendanceRequest request, UUID programId, UUID cohortId) {
         Program program = programRepository.findById(programId)
