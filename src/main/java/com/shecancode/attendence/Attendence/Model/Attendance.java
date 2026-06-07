@@ -49,7 +49,7 @@ public class Attendance {
     @Column(name = "attendance_status", nullable = false)
     private AttendanceStatus attendanceStatus;
 
-    @Column(name = "check_in_time", nullable = false)
+    @Column(name = "check_in_time", nullable = false, columnDefinition = "TIME")
     private LocalTime checkInTime;
 
     @Column(name = "remarks")
