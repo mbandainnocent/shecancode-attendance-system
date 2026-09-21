@@ -30,8 +30,6 @@ build/
 !**/src/test/**/build/
 
 ### Secrets / local config (never commit credentials) ###
-.env
-.env.*
 *.env
 !.env.example
 application-local.yml
@@ -46,3 +44,5 @@ branch_structure.json
 temp_auto_push.bat
 temp_interactive_push.bat
 .gitignore
+config.bat
+node_modules
