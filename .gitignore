@@ -30,8 +30,6 @@ build/
 !**/src/test/**/build/
 
 ### Secrets / local config (never commit credentials) ###
-.env
-.env.*
 *.env
 !.env.example
 application-local.yml
@@ -42,10 +40,8 @@ application-secret*.yaml
 application-secret*.properties
 
 ### VS Code ###
-.vscode/
 
 ### Local scratch output ###
 .tmp/
-branch_structure.json
-temp_auto_push.bat
-temp_interactive_push.bat
+config.bat
+node_modules
