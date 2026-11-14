@@ -11,8 +11,14 @@ import org.springframework.util.backoff.FixedBackOff;
 @Configuration
 public class KafkaTopicConfig {
 
+    public static final String STUDENT_REGISTRATION_TOPIC = "student-registration-events";
     public static final String ATTENDANCE_TOPIC = "attendance-events";
     public static final String ALERT_TOPIC = "attendance-alerts";
+
+    @Bean
+    public NewTopic studentRegistrationTopic() {
+        return TopicBuilder.name(STUDENT_REGISTRATION_TOPIC).partitions(3).replicas(1).build();
+    }
 
     @Bean
     public NewTopic attendanceTopic(){
