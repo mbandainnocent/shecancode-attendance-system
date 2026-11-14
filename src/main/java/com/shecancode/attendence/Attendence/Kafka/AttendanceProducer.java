@@ -1,5 +1,6 @@
 package com.shecancode.attendence.Attendence.Kafka;
 
+import com.shecancode.attendence.registration.Event.StudentRegisteredEvent;
 import com.shecancode.attendence.Attendence.Event.AttendanceAlertEvent;
 import com.shecancode.attendence.Attendence.Event.AttendanceEvent;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,11 @@ public class AttendanceProducer {
 
     public CompletableFuture<SendResult<String, Object>> sendAlertEvent(AttendanceAlertEvent event) {
         return send(KafkaTopicConfig.ALERT_TOPIC, event.getStudentId().toString(), event);
+    }
+
+    public CompletableFuture<SendResult<String, Object>> sendStudentRegisteredEvent(
+            StudentRegisteredEvent event) {
+        return send(KafkaTopicConfig.STUDENT_REGISTRATION_TOPIC, event.getStudentId().toString(), event);
     }
 
     // Keyed by student id so all events for one student land on the same partition, in order.

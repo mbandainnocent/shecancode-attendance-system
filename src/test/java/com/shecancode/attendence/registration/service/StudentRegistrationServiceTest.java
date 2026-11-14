@@ -45,6 +45,10 @@ class StudentRegistrationServiceTest {
     private StudentRegistrationService registrationService;
 
     @Mock
+    private com.shecancode.attendence.Attendence.Event.OutboxRepository outboxRepository;
+    @Mock
+    private com.shecancode.attendence.Attendence.Event.OutboxEventFactory outboxEventFactory;
+    @Mock
     private StudentRepository studentRepository;
     @Mock
     private CohortRepository cohortRepository;
@@ -88,6 +92,10 @@ class StudentRegistrationServiceTest {
 
         StudentResponseDao response = registrationService.createStudentAccount(validRequest);
 
+        ArgumentCaptor<Student> registeredStudent = ArgumentCaptor.forClass(Student.class);
+        verify(outboxEventFactory).createStudentRegisteredEvent(registeredStudent.capture());
+        assertEquals(response.getEmail(), registeredStudent.getValue().getEmail());
+        verify(outboxRepository).save(any());
         assertNotNull(response);
         assertEquals("joseph@gmail.com", response.getEmail());
         assertEquals("Cohort-10", response.getCohortNumber());
@@ -109,6 +117,7 @@ class StudentRegistrationServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> registrationService.createStudentAccount(validRequest));
         verify(activationService, never()).sendStudentInvitation(any(), any());
+        verifyNoInteractions(outboxRepository, outboxEventFactory);
     }
 
     @Test
@@ -151,6 +160,7 @@ class StudentRegistrationServiceTest {
         assertThrows(CohortProgramMismatchException.class,
                 () -> registrationService.createStudentAccount(validRequest));
         verify(activationService, never()).sendStudentInvitation(any(), any());
+        verifyNoInteractions(outboxRepository, outboxEventFactory);
     }
 
     @Test

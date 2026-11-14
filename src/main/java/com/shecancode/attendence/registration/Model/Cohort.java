@@ -6,6 +6,7 @@ import lombok.*;
 import com.shecancode.attendence.registration.Enum.LifecycleStatus;
 
 import java.time.Instant;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -48,6 +49,9 @@ public class Cohort {
     @Column(name = "stipend_eligible", nullable = false)
     private boolean stipendEligible;
 
+    @Column(name = "stipend_amount", precision = 19, scale = 2)
+    private BigDecimal stipendAmount;
+
     // Soft delete: set when an admin deletes the cohort; null while it exists.
     @Column(name = "deleted_at")
     private Instant deletedAt;
@@ -56,4 +60,5 @@ public class Cohort {
     public boolean isReadOnly() {
         return status == LifecycleStatus.CLOSED || (program != null && program.isClosed());
     }
+
 }

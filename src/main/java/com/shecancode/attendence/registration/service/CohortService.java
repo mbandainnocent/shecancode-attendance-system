@@ -26,6 +26,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -77,6 +78,7 @@ public class CohortService {
             throw new IllegalArgumentException("stipendEligible is required: decide whether this cohort is eligible for a stipend");
         }
 
+        validateStipend(cohortRequestDao.getStipendEligible(), cohortRequestDao.getStipendAmount());
         validateDates(cohortRequestDao);
         Cohort cohort = Cohort.builder()
                 .id(UUID.randomUUID())
@@ -85,6 +87,7 @@ public class CohortService {
                 .endDate(cohortRequestDao.getEndDate())
                 .program(program)
                 .stipendEligible(cohortRequestDao.getStipendEligible())
+                .stipendAmount(cohortRequestDao.getStipendAmount())
                 .build();
 
         Cohort savedCohort = cohortRepository.save(cohort);
@@ -126,6 +129,15 @@ public class CohortService {
         }
         validateDates(request);
 
+        boolean eligible = request.getStipendEligible() != null
+                ? request.getStipendEligible() : cohort.isStipendEligible();
+        BigDecimal amount = request.getStipendAmount() != null
+                ? request.getStipendAmount() : cohort.getStipendAmount();
+        if (!eligible) {
+            amount = request.getStipendAmount();
+        }
+        validateStipend(eligible, amount);
+        cohort.setStipendAmount(amount);
         cohort.setCohortNumber(request.getCohortNumber());
         cohort.setStartDate(request.getStartDate());
         cohort.setEndDate(request.getEndDate());
@@ -200,6 +212,18 @@ public class CohortService {
     private static void requireWritable(Cohort cohort) {
         if (cohort.isReadOnly()) {
             throw new ReadOnlyException("Cohort " + cohort.getCohortNumber() + " is closed; reopen it to make changes.");
+        }
+    }
+
+    private static void validateStipend(boolean eligible, BigDecimal amount) {
+        if (!eligible && amount != null) {
+            throw new IllegalArgumentException("stipendAmount must be omitted when the cohort is not stipend eligible");
+        }
+        if (eligible && (amount == null || amount.signum() <= 0)) {
+            throw new IllegalArgumentException("A positive stipendAmount is required for stipend eligible cohorts");
+        }
+        if (amount != null && (amount.scale() > 2 || amount.precision() - amount.scale() > 17)) {
+            throw new IllegalArgumentException("stipendAmount must have at most 17 integer digits and 2 decimal places");
         }
     }
 

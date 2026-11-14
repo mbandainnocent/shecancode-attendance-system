@@ -4,6 +4,7 @@ import lombok.*;
 
 import com.shecancode.attendence.registration.Enum.LifecycleStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -24,4 +25,6 @@ public class CohortResponseDao {
     private boolean stipendEligible;
     // True when the cohort or its program is closed.
     private boolean readOnly;
+    private BigDecimal stipendAmount;
+
 }

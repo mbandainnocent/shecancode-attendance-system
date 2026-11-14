@@ -21,6 +21,7 @@ public class CohortMapper {
                 .programName(program != null ? program.getProgramName() : null)
                 .status(cohort.getStatus())
                 .stipendEligible(cohort.isStipendEligible())
+                .stipendAmount(cohort.getStipendAmount())
                 .readOnly(cohort.isReadOnly())
                 .build();
     }
@@ -33,6 +34,7 @@ public class CohortMapper {
                 .startDate(requestDao.getStartDate())
                 .endDate(requestDao.getEndDate())
                 .stipendEligible(Boolean.TRUE.equals(requestDao.getStipendEligible()))
+                .stipendAmount(Boolean.TRUE.equals(requestDao.getStipendEligible()) ? requestDao.getStipendAmount() : null)
                 .build();
     }
 }
