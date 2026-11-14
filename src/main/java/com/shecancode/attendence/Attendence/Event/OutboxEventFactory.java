@@ -1,5 +1,7 @@
 package com.shecancode.attendence.Attendence.Event;
 
+import com.shecancode.attendence.registration.Model.Student;
+import com.shecancode.attendence.registration.Event.StudentRegisteredEvent;
 import com.shecancode.attendence.Attendence.Model.Attendance;
 import com.shecancode.attendence.Attendence.Model.AttendanceAlert;
 import org.springframework.stereotype.Component;
@@ -15,6 +17,18 @@ public class OutboxEventFactory {
 
     public OutboxEventFactory(EventSerializer eventSerializer) {
         this.eventSerializer = eventSerializer;
+    }
+
+    public OutboxEvent createStudentRegisteredEvent(Student student) {
+        var event = StudentRegisteredEvent.builder()
+                .version(1)
+                .eventId(UUID.randomUUID())
+                .studentId(student.getId())
+                .programId(student.getProgram().getId())
+                .cohortId(student.getCohort().getId())
+                .timestamp(Instant.now())
+                .build();
+        return buildOutboxEvent(student.getId(), EventType.STUDENT_REGISTERED, event);
     }
 
     public OutboxEvent createAttendanceOutboxEvent(Attendance attendance) {

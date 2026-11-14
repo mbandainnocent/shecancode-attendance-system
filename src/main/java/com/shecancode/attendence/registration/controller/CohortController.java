@@ -66,10 +66,10 @@ public class CohortController {
     @PostMapping
     @Operation(summary = "Create a cohort (ADMIN only)",
             description = "Creates a new cohort. Cohort number must be unique; endDate must not be before startDate; " +
-                    "stipendEligible must be set to say whether the cohort's students can receive a stipend.")
+                    "stipendEligible must be set to say whether the cohort's students can receive a stipend. Eligible cohorts require a positive stipendAmount.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Cohort created successfully"),
-            @ApiResponse(responseCode = "400", description = "Blank cohort number, endDate before startDate, or missing stipendEligible", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Blank cohort number, endDate before startDate, missing stipendEligible, or invalid stipendAmount", content = @Content),
             @ApiResponse(responseCode = "401", description = "Missing or invalid JWT", content = @Content),
             @ApiResponse(responseCode = "403", description = "Caller is not an ADMIN", content = @Content),
             @ApiResponse(responseCode = "404", description = "The referenced program was not found", content = @Content),
@@ -87,7 +87,7 @@ public class CohortController {
 
     @PutMapping("/{cohortId}")
     @Operation(summary = "Update a cohort (ADMIN only)",
-            description = "Replaces number and dates, and stipendEligible when given. programId must be the cohort's current program. " +
+            description = "Replaces number and dates, and stipendEligible/stipendAmount when given. Disabling stipend eligibility clears the amount. programId must be the cohort's current program. " +
                     "Not allowed while the cohort or its program is closed.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Cohort updated"),

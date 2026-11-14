@@ -1,5 +1,8 @@
 package com.shecancode.attendence.registration.service;
 
+import com.shecancode.attendence.registration.Model.Student;
+import com.shecancode.attendence.Attendence.Event.OutboxEventFactory;
+import com.shecancode.attendence.Attendence.Event.OutboxRepository;
 import com.shecancode.attendence.auth.util.EmailUtils;
 import com.shecancode.attendence.auth.model.AccountStatus;
 import com.shecancode.attendence.auth.model.AppUser;
@@ -16,7 +19,6 @@ import com.shecancode.attendence.registration.Exception.StudentNotFoundException
 import com.shecancode.attendence.registration.Mapper.StudentMapper;
 import com.shecancode.attendence.registration.Model.Cohort;
 import com.shecancode.attendence.registration.Model.Program;
-import com.shecancode.attendence.registration.Model.Student;
 import com.shecancode.attendence.registration.Model.StudentProfile;
 import com.shecancode.attendence.registration.Repository.CohortRepository;
 import com.shecancode.attendence.registration.Repository.ProgramRepository;
@@ -38,6 +40,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class StudentRegistrationService {
 
+    private final OutboxRepository outboxRepository;
+    private final OutboxEventFactory outboxEventFactory;
     private final StudentRepository studentRepository;
     private final CohortRepository cohortRepository;
     private final ProgramRepository programsRepository;
@@ -105,6 +109,7 @@ public class StudentRegistrationService {
         Student savedStudent = studentRepository.save(student);
 
         activationService.sendStudentInvitation(user, savedStudent);
+        outboxRepository.save(outboxEventFactory.createStudentRegisteredEvent(savedStudent));
 
         log.info("Student invited (pending activation): {} into {} / {}",
                 LoggingUtils.sanitizeForLogging(email),
