@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,6 +51,7 @@ class CohortServiceTest {
                 .startDate(LocalDate.now())
                 .endDate(LocalDate.now())
                 .stipendEligible(true)
+                .stipendAmount(new BigDecimal("50000.00"))
                 .build();
 
     }
@@ -67,6 +69,7 @@ class CohortServiceTest {
         assertEquals("C10", savedCohort.getCohortNumber());
         assertEquals("Backend", savedCohort.getProgramName());
         assertTrue(savedCohort.isStipendEligible());
+        assertEquals(new BigDecimal("50000.00"), savedCohort.getStipendAmount());
         verify(cohortRepository).existsByProgram_IdAndCohortNumber(programId, "C10");
         verify(cohortRepository, times(1)).save(any(Cohort.class));
     }
@@ -98,4 +101,42 @@ class CohortServiceTest {
     }
 
 
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.NullSource
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"0", "-10", "1.001", "100000000000000000"})
+    void eligibleCohortRejectsInvalidAmount(String amount) {
+        cohortRequestToTest.setStipendAmount(amount == null ? null : new BigDecimal(amount));
+        when(programRepository.findByIdAndDeletedAtIsNull(programId)).thenReturn(Optional.of(program));
+        assertThrows(IllegalArgumentException.class, () -> cohortService.createCohort(cohortRequestToTest));
+        verify(cohortRepository, never()).save(any());
+    }
+
+    @Test
+    void ineligibleCohortNeedsNoAmount() {
+        cohortRequestToTest.setStipendEligible(false);
+        cohortRequestToTest.setStipendAmount(null);
+        when(programRepository.findByIdAndDeletedAtIsNull(programId)).thenReturn(Optional.of(program));
+        when(cohortRepository.save(any(Cohort.class))).thenAnswer(i -> i.getArgument(0));
+        assertNull(cohortService.createCohort(cohortRequestToTest).getStipendAmount());
+    }
+
+    @Test
+    void updatePreservesAmountAndDisablingEligibilityClearsIt() {
+        UUID id = UUID.randomUUID();
+        Cohort cohort = Cohort.builder().id(id).program(program).stipendEligible(true)
+                .stipendAmount(new BigDecimal("50000.00")).build();
+        when(cohortRepository.findByIdAndDeletedAtIsNull(id)).thenReturn(Optional.of(cohort));
+        when(cohortRepository.save(any(Cohort.class))).thenAnswer(i -> i.getArgument(0));
+        cohortRequestToTest.setStipendEligible(null);
+        cohortRequestToTest.setStipendAmount(null);
+        assertEquals(new BigDecimal("50000.00"), cohortService.updateCohort(id, cohortRequestToTest).getStipendAmount());
+        cohortRequestToTest.setStipendAmount(new BigDecimal("60000.00"));
+        assertEquals(new BigDecimal("60000.00"), cohortService.updateCohort(id, cohortRequestToTest).getStipendAmount());
+        cohortRequestToTest.setStipendEligible(false);
+        cohortRequestToTest.setStipendAmount(null);
+        assertNull(cohortService.updateCohort(id, cohortRequestToTest).getStipendAmount());
+        cohortRequestToTest.setStipendEligible(true);
+        assertThrows(IllegalArgumentException.class, () -> cohortService.updateCohort(id, cohortRequestToTest));
+    }
 }

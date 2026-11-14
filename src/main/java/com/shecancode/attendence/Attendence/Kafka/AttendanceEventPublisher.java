@@ -1,11 +1,12 @@
 package com.shecancode.attendence.Attendence.Kafka;
 
+import com.shecancode.attendence.registration.Event.StudentRegisteredEvent;
+import com.shecancode.attendence.Attendence.Event.OutboxRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shecancode.attendence.Attendence.Event.AttendanceAlertEvent;
 import com.shecancode.attendence.Attendence.Event.AttendanceEvent;
 import com.shecancode.attendence.Attendence.Event.OutboxEvent;
-import com.shecancode.attendence.Attendence.Event.OutboxRepository;
 import com.shecancode.attendence.Attendence.Event.OutboxStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +60,9 @@ public class AttendanceEventPublisher {
 
     private void publish(OutboxEvent outbox) throws Exception {
         switch (outbox.getEventType()) {
+            case STUDENT_REGISTERED -> producer.sendStudentRegisteredEvent(
+                    objectMapper.readValue(outbox.getPayload(),
+                            StudentRegisteredEvent.class)).get();
             case ATTENDANCE_RECORDED, ATTENDANCE_UPDATED -> producer.sendAttendanceEvent(
                     objectMapper.readValue(outbox.getPayload(), AttendanceEvent.class)).get();
             case ATTENDANCE_ALERT_TRIGGERED -> producer.sendAlertEvent(
